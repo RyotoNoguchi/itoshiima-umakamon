@@ -22,28 +22,23 @@ jobs:
           node-version: 'lts/*'
           check-latest: true
 
-      - name: Cache node modules
-        id: cache-npm
+      - name: Cache Yarn dependencies
         uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+            ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build and Publish to Oxygen
         id: deploy
         uses: shopify/oxygenctl-action@v4
         with:
           oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000012276 }}
-          build_command: "npm run build"
+          build_command: "yarn build"
 
       # Create GitHub Deployment
       - name: Create GitHub Deployment
@@ -54,4 +49,3 @@ jobs:
           environment: 'preview'
           preview_url: ${{ steps.deploy.outputs.url }}
           description: ${{ github.event.head_commit.message }}
-        
